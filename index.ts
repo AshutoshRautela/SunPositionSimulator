@@ -19,7 +19,8 @@ const dateUI = {
     month: 1,
     hours: 13,
     minutes: 0,
-    hoursMinutes: 0
+    hoursMinutes: 0,
+    animate: false
 }
 
 const result = {
@@ -31,6 +32,7 @@ let sunLight: DirectionalLight;
 let sunHelper: DirectionalLightHelper;
 let sphere: Object3D;
 let gui: GUI;
+let folder1: GUI;
 
 window.onload = () => {
     setupGUI();
@@ -46,7 +48,7 @@ const setupGUI = () => {
     (datePicker as HTMLInputElement).value = date;
 
     gui = new GUI();
-    const folder1 = gui.addFolder('Date');
+    folder1 = gui.addFolder('Date');
     folder1.add(dateUI, 'day', 1, 31, 1).onChange(onUIChange);
     folder1.add(dateUI, 'month', 1, 12, 1).onChange(onUIChange);
     folder1.add(dateUI, 'hours', 0, 24, 1).onChange(() => {
@@ -60,15 +62,22 @@ const setupGUI = () => {
         onUIChange();
     });
     folder1.add(dateUI, 'hoursMinutes', 0, 1440, 1).onChange(() => {
-        dateUI.hours = dateUI.hoursMinutes / 60;
-        dateUI.minutes = dateUI.hoursMinutes % 60;
-        folder1.updateDisplay();
+        hoursMinsUpdate();
+    });
+    folder1.add(dateUI, 'animate').onChange(() => { 
         onUIChange();
     });
 
     folder2 = gui.addFolder('Solar Angles');
     folder2.add(result, 'elevation', result.elevation);
     folder2.add(result, 'azimuth', result.azimuth);
+}
+
+const hoursMinsUpdate = () => {
+    dateUI.hours = dateUI.hoursMinutes / 60;
+    dateUI.minutes = dateUI.hoursMinutes % 60;
+    folder1.updateDisplay();
+    onUIChange();
 }
 
 const onUIChange = () => {
@@ -174,7 +183,13 @@ const init = () => {
     sunLight.shadow.bias = -0.005;
 }
 
+let animationCycle = 4000 + 1;
+
 const renderFrame = () => {
+    if (dateUI.animate) {
+        dateUI.hoursMinutes = ((performance.now() % animationCycle) / animationCycle) * 1440;
+        hoursMinsUpdate();
+    }
     myScene.renderFrame();
     requestAnimationFrame(renderFrame);
 }
